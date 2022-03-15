@@ -77,10 +77,6 @@ public final class CounterServer implements Closeable {
     scanner.nextLine();
     counterServer.close();
 
-
-
-
-
   }
 
 }

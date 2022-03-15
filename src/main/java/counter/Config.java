@@ -14,8 +14,6 @@ public final class Config {
     public static final List<RaftPeer> PEERS;
 
     static {
-        // raft.server.address.list=127.0.0.1:10024,127.0.0.1:10124,127.0.0.1:11124
-
         List<RaftPeer> peers = new ArrayList<>(3);
         peers.add(RaftPeer.newBuilder().setId("node1").setAddress("127.0.0.1:6000").build());
         peers.add(RaftPeer.newBuilder().setId("node2").setAddress("127.0.0.1:6001").build());

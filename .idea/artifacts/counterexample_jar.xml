@@ -1,0 +1,21 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="counterexample:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/counterexample_jar</output-path>
+    <root id="archive" name="RustUnderFire.jar">
+      <element id="module-output" name="RustUnderFire" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-metrics/2.2.0/ratis-metrics-2.2.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-grpc/2.2.0/ratis-grpc-2.2.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/log4j/log4j/1.2.17/log4j-1.2.17.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-server-api/2.2.0/ratis-server-api-2.2.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-proto/2.2.0/ratis-proto-2.2.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-thirdparty-misc/0.7.0/ratis-thirdparty-misc-0.7.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-client/2.2.0/ratis-client-2.2.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-server/2.2.0/ratis-server-2.2.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/2.0.0-alpha5/slf4j-api-2.0.0-alpha5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/io/dropwizard/metrics/metrics-core/3.2.5/metrics-core-3.2.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-log4j12/2.0.0-alpha5/slf4j-log4j12-2.0.0-alpha5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/ratis/ratis-common/2.2.0/ratis-common-2.2.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

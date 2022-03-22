@@ -27,19 +27,19 @@ public class CrudClient {
 
         JSONObject requestJson = new JSONObject();
         requestJson.put("REQUEST", "PUT");
-        requestJson.put("KEY", "mykey6");
-        requestJson.put("VALUE", "myvalue6");
+        requestJson.put("KEY", "mykey9");
+        requestJson.put("VALUE", "myvalue9");
 
 
-        String requestMsg = requestJson.toString();
-        RaftClientReply putValue = raftClient.io().send(Message.valueOf(requestMsg));
-        String response = putValue.getMessage().getContent().toString(Charset.defaultCharset());
-        System.out.println("Request response: " + response);
+        //String requestMsg = requestJson.toString();
+        //RaftClientReply putValue = raftClient.io().send(Message.valueOf(requestMsg));
+        //String response = putValue.getMessage().getContent().toString(Charset.defaultCharset());
+        //System.out.println("Request response: " + response);
 
 
         JSONObject requestJson2 = new JSONObject();
-        requestJson2.put("REQUEST", "GET");
-        requestJson2.put("KEY", "mykey5");
+        requestJson2.put("REQUEST", "KEYSET");
+        //requestJson2.put("KEY", "mykey6");
         String requestMsg2 = requestJson2.toString();
 
 

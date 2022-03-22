@@ -38,7 +38,6 @@ public class CrudStateMachine extends BaseStateMachine {
         String[] svSplitted = sv.split(":");
 
         this.mapServer = new MapDBServer("src/main/java/mapdb/files/" + svSplitted[0] + ".db", "map" + svSplitted[0]);
-        //this.mapServer.map.put("chave","valor");
 
     }
 
@@ -78,7 +77,7 @@ public class CrudStateMachine extends BaseStateMachine {
 
     // ------------------------------------------------------------------------------------------------------------------ //
 
-     //Handle GET command, which used by clients to get a value through a key
+     //Handle GET commands, which used by clients to get a value through a key
     @Override
     public CompletableFuture<Message> query(Message request) {
 
@@ -90,17 +89,36 @@ public class CrudStateMachine extends BaseStateMachine {
             return CompletableFuture.completedFuture(
                     Message.valueOf("There is no REQUEST argument in the message body")); }
 
-        if (!clientRequest.get("REQUEST").equals("GET")) {
-            return CompletableFuture.completedFuture(
-                    Message.valueOf("Invalid request type!")); }
+        String operation, requestedValue;
 
-        String value = this.mapServer.map.get(clientRequest.get("KEY").toString()); // returns the value contained in the mapdb
+        switch (clientRequest.get("REQUEST").toString()) {
+            case "GET":
+                requestedValue = this.mapServer.map.get(clientRequest.get("KEY").toString()); // returns the value contained in the mapdb
+                operation = "PUT";
+                break;
 
-        if(value == null)
+            case "KEYSET":
+                requestedValue = this.mapServer.map.keySet().toString();
+                operation = "KEYSET";
+                break;
+
+            case "SIZE":
+                requestedValue = String.valueOf(this.mapServer.map.size());
+                operation = "SIZE";
+                break;
+
+            default:
+                return CompletableFuture.completedFuture(
+                        Message.valueOf("Invalid request type!"));
+        }
+
+        LOG.info("{} operation performed", operation);
+
+        if(requestedValue == null)
             return CompletableFuture.completedFuture(Message.EMPTY);
         else
             return CompletableFuture.completedFuture(
-                    Message.valueOf(value));
+                    Message.valueOf(requestedValue));
     }
 
     @Override
@@ -140,11 +158,6 @@ public class CrudStateMachine extends BaseStateMachine {
                 this.mapServer.map.remove(clientRequest.get("KEY").toString());
                 operation = "DELETE";
                 break;
-
-            //case "KEYSET":
-            //    this.mapServer.map.
-            //    operation = "DELETE";
-            //    break;
 
             default:
                 return CompletableFuture.completedFuture(

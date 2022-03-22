@@ -1,8 +1,6 @@
 package mapdb.crud;
 
 import counter.Config;
-import mapdb.MapDBServer;
-import org.apache.ratis.conf.Parameters;
 import org.apache.ratis.conf.RaftProperties;
 import org.apache.ratis.grpc.GrpcConfigKeys;
 import org.apache.ratis.protocol.RaftPeer;

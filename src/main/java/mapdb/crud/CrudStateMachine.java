@@ -12,11 +12,11 @@ import org.apache.ratis.statemachine.TransactionContext;
 import org.apache.ratis.statemachine.impl.BaseStateMachine;
 import org.apache.ratis.statemachine.impl.SimpleStateMachineStorage;
 import org.apache.ratis.statemachine.impl.SingleFileSnapshotInfo;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
-
 
 public class CrudStateMachine extends BaseStateMachine {
 
@@ -37,7 +37,7 @@ public class CrudStateMachine extends BaseStateMachine {
         String sv = server.toString();
         String[] svSplitted = sv.split(":");
 
-        this.mapServer = new MapDBServer("src/main/java/mapdb/files/"+svSplitted[0]+".db", "map"+svSplitted[0]);
+        this.mapServer = new MapDBServer("src/main/java/mapdb/files/" + svSplitted[0] + ".db", "map" + svSplitted[0]);
         //this.mapServer.map.put("chave","valor");
 
     }
@@ -78,21 +78,29 @@ public class CrudStateMachine extends BaseStateMachine {
 
     // ------------------------------------------------------------------------------------------------------------------ //
 
-     //Handle GET command, which used by clients to get
+     //Handle GET command, which used by clients to get a value through a key
     @Override
     public CompletableFuture<Message> query(Message request) {
-        String msg = request.getContent().toString(Charset.defaultCharset());
-        String[] msgSplitted = msg.split(",");
 
-        if (!msgSplitted[0].equals("GET")) {
+        String msg = request.getContent().toString(Charset.defaultCharset()); // msg arrive in json string format by the client
+
+        JSONObject clientRequest = new JSONObject(msg);
+
+        if (!clientRequest.has("REQUEST")) {
             return CompletableFuture.completedFuture(
-                    Message.valueOf("Invalid Command"));
-        }
+                    Message.valueOf("There is no REQUEST argument in the message body")); }
 
-        String value = this.mapServer.map.get(msgSplitted[1]);
+        if (!clientRequest.get("REQUEST").equals("GET")) {
+            return CompletableFuture.completedFuture(
+                    Message.valueOf("Invalid request type!")); }
 
-        return CompletableFuture.completedFuture(
-                Message.valueOf(value));
+        String value = this.mapServer.map.get(clientRequest.get("KEY").toString()); // returns the value contained in the mapdb
+
+        if(value == null)
+            return CompletableFuture.completedFuture(Message.EMPTY);
+        else
+            return CompletableFuture.completedFuture(
+                    Message.valueOf(value));
     }
 
     @Override
@@ -103,26 +111,54 @@ public class CrudStateMachine extends BaseStateMachine {
         String logData = entry.getStateMachineLogEntry().getLogData()
                 .toString(Charset.defaultCharset());
 
-        String[] logDataSplitted = logData.split(",");
+        //trx.getLogEntry().getMetadataEntry().toString();
 
-        if (!logDataSplitted[0].equals("PUT")) {
+        JSONObject clientRequest = new JSONObject(logData);
+
+        if (!clientRequest.has("REQUEST")) {
             return CompletableFuture.completedFuture(
-                    Message.valueOf("Invalid Command"));
-        }
+                    Message.valueOf("There is no REQUEST argument in the message body")); }
+
         //update the last applied term and index
         final long index = entry.getIndex();
         updateLastAppliedTermIndex(entry.getTerm(), index);
 
-        // put key and value
-        String value = this.mapServer.map.put(logDataSplitted[1],logDataSplitted[2]);
+        String operation;
 
-        //return the new value of the counter to the client
+        switch (clientRequest.get("REQUEST").toString()) {
+            case "PUT":
+                this.mapServer.map.put(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
+                operation = "PUT";
+                break;
+
+            case "UPDATE":
+                this.mapServer.map.replace(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
+                operation = "UPDATE";
+                break;
+
+            case "DELETE":
+                this.mapServer.map.remove(clientRequest.get("KEY").toString());
+                operation = "DELETE";
+                break;
+
+            //case "KEYSET":
+            //    this.mapServer.map.
+            //    operation = "DELETE";
+            //    break;
+
+            default:
+                return CompletableFuture.completedFuture(
+                        Message.valueOf("Invalid request type!"));
+
+        }
+
+        // return success to client
         final CompletableFuture<Message> f =
-                CompletableFuture.completedFuture(Message.valueOf("Put value: " + logDataSplitted[1] + " with key: " + logDataSplitted[2]));
+                CompletableFuture.completedFuture(Message.valueOf("200 SUCCESS!"));
 
-        //if leader, log the incremented value and it's log index
+        // if leader, log the incremented value and it's log index
         if (trx.getServerRole() == RaftProtos.RaftPeerRole.LEADER) {
-            LOG.info("{}: term", index);
+            LOG.info("{} operation performed - {}: term", operation, index);
         }
 
         return f;

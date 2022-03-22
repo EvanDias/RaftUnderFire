@@ -8,29 +8,47 @@ import org.apache.ratis.grpc.GrpcFactory;
 import org.apache.ratis.protocol.ClientId;
 import org.apache.ratis.protocol.Message;
 import org.apache.ratis.protocol.RaftClientReply;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class CrudClient {
 
     private CrudClient(){
     }
 
+
     public static void main(String[] args)
             throws IOException, InterruptedException {
 
+
         RaftClient raftClient = buildClient();
 
-        //RaftClientReply putValue = raftClient.io().send(Message.valueOf("PUT,mykey10,myvalue10"));
+        JSONObject requestJson = new JSONObject();
+        requestJson.put("REQUEST", "PUT");
+        requestJson.put("KEY", "mykey6");
+        requestJson.put("VALUE", "myvalue6");
+
+
+        String requestMsg = requestJson.toString();
+        RaftClientReply putValue = raftClient.io().send(Message.valueOf(requestMsg));
+        String response = putValue.getMessage().getContent().toString(Charset.defaultCharset());
+        System.out.println("Request response: " + response);
+
+
+        JSONObject requestJson2 = new JSONObject();
+        requestJson2.put("REQUEST", "GET");
+        requestJson2.put("KEY", "mykey5");
+        String requestMsg2 = requestJson2.toString();
+
 
         //send GET command and print the response
-        RaftClientReply getValue = raftClient.io().sendReadOnly(Message.valueOf("GET,mykey10"));
-        String response = getValue.getMessage().getContent().toString(Charset.defaultCharset());
-        System.out.println("Value: " + response);
+        RaftClientReply getValue = raftClient.io().sendReadOnly(Message.valueOf(requestMsg2));
+        String response2 = getValue.getMessage().getContent().toString(Charset.defaultCharset());
+        System.out.println("Value: " + response2);
+
+
 
     }
 

@@ -6,18 +6,13 @@ import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
-import java.util.logging.Logger;
-
-
 public class MapDBServer extends BaseStateMachine {
 
     public DB db;
     public HTreeMap<String, String> map;
-    private final Logger logger;
 
     public MapDBServer(String dbpath, String nameMap) {
-        this.db = DBMaker.fileDB(dbpath).fileMmapEnable().make();
-        this.logger = Logger.getLogger(MapDBServer.class.getName());
+        this.db = DBMaker.fileDB(dbpath).fileMmapEnable().transactionEnable().make();
         this.map = db.hashMap(nameMap)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.STRING)
@@ -32,6 +27,32 @@ public class MapDBServer extends BaseStateMachine {
         this.db.close();
     }
 
+    public void putValue(String key, String value) {
+        this.map.put(key,value);
+    }
+
+    public void updateValue(String key, String value) {
+        if (this.map.containsKey(key))
+            this.map.replace(key,value);
+        else
+            putValue(key,value);
+    }
+
+    public void deleteValue(String key) {
+        this.map.remove(key);
+    }
+
+    public String getValue(String key) {
+        return this.map.get(key);
+    }
+
+    public String getKeySet() {
+        return this.map.keySet().toString();
+    }
+
+    public String getSize() {
+        return String.valueOf(this.map.getSize());
+    }
 
     /*
     public void hTreeMap() {

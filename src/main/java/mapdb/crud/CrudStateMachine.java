@@ -25,7 +25,6 @@ public class CrudStateMachine extends BaseStateMachine {
 
     public MapDBServer mapServer;
 
-    // ------------------------------------------------------------------------------------------------------------------ //
 
     @Override
     public void initialize(RaftServer server, RaftGroupId groupId,
@@ -39,16 +38,18 @@ public class CrudStateMachine extends BaseStateMachine {
 
         this.mapServer = new MapDBServer("src/main/java/mapdb/files/" + svSplitted[0] + ".db", "map" + svSplitted[0]);
 
+        //LogEntryHeader[] entries = server.getDivision(groupId).getRaftLog().getEntries(0,5);
+        //for (LogEntryHeader entry : entries) {
+        //    System.out.println("ENTRY: " + entry.toString());
+       //}
     }
 
-    // ------------------------------------------------------------------------------------------------------------------ //
 
     @Override
     public void reinitialize() throws IOException {
         load(storage.getLatestSnapshot());
     }
 
-    // ------------------------------------------------------------------------------------------------------------------ //
 
     // Load the state of the state machine from the storage.
     private long load(SingleFileSnapshotInfo snapshot) throws IOException {
@@ -75,9 +76,14 @@ public class CrudStateMachine extends BaseStateMachine {
         return last.getIndex();
     }
 
-    // ------------------------------------------------------------------------------------------------------------------ //
 
-     //Handle GET commands, which used by clients to get a value through a key
+    /**
+     *  This class maintain a HTreeMap (MapDB) and accept many commands/requests:
+     *  GET, KEYSET and SIZE, GET. They are ReadOnly commands which will be handled by
+     *  this method
+     * @param request client request that arrive in a String/Json format
+     * @return message reply to client
+     */
     @Override
     public CompletableFuture<Message> query(Message request) {
 
@@ -93,17 +99,17 @@ public class CrudStateMachine extends BaseStateMachine {
 
         switch (clientRequest.get("REQUEST").toString()) {
             case "GET":
-                requestedValue = this.mapServer.map.get(clientRequest.get("KEY").toString()); // returns the value contained in the mapdb
-                operation = "PUT";
+                requestedValue = this.mapServer.getValue(clientRequest.get("KEY").toString()); // returns the value contained in the mapdb
+                operation = "GET";
                 break;
 
             case "KEYSET":
-                requestedValue = this.mapServer.map.keySet().toString();
+                requestedValue = this.mapServer.getKeySet();
                 operation = "KEYSET";
                 break;
 
             case "SIZE":
-                requestedValue = String.valueOf(this.mapServer.map.size());
+                requestedValue = this.mapServer.getSize();
                 operation = "SIZE";
                 break;
 
@@ -112,7 +118,10 @@ public class CrudStateMachine extends BaseStateMachine {
                         Message.valueOf("Invalid request type!"));
         }
 
-        LOG.info("{} operation performed", operation);
+        final long index = getLastAppliedTermIndex().getIndex();
+        final long term = getLastAppliedTermIndex().getTerm();
+
+        LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry: {} | Reply: {}", operation, index, term, clientRequest.toString(), requestedValue);
 
         if(requestedValue == null)
             return CompletableFuture.completedFuture(Message.EMPTY);
@@ -121,6 +130,13 @@ public class CrudStateMachine extends BaseStateMachine {
                     Message.valueOf(requestedValue));
     }
 
+    /**
+     *  This class maintain a HTreeMap (MapDB) and accept many commands/requests:
+     *  PUT, UPDATE AND DELETE. They are transactional commands which will be handled by
+     *  this method
+     * @param trx committed entry coming from the RAFT log from the leader
+     * @return message reply to client
+     */
     @Override
     public CompletableFuture<Message> applyTransaction(TransactionContext trx) {
         final RaftProtos.LogEntryProto entry = trx.getLogEntry();
@@ -139,23 +155,24 @@ public class CrudStateMachine extends BaseStateMachine {
 
         //update the last applied term and index
         final long index = entry.getIndex();
-        updateLastAppliedTermIndex(entry.getTerm(), index);
+        final long term = entry.getTerm();
+        updateLastAppliedTermIndex(term, index);
 
         String operation;
 
         switch (clientRequest.get("REQUEST").toString()) {
             case "PUT":
-                this.mapServer.map.put(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
+                this.mapServer.putValue(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
                 operation = "PUT";
                 break;
 
             case "UPDATE":
-                this.mapServer.map.replace(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
+                this.mapServer.updateValue(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
                 operation = "UPDATE";
                 break;
 
             case "DELETE":
-                this.mapServer.map.remove(clientRequest.get("KEY").toString());
+                this.mapServer.deleteValue(clientRequest.get("KEY").toString());
                 operation = "DELETE";
                 break;
 
@@ -167,20 +184,15 @@ public class CrudStateMachine extends BaseStateMachine {
 
         // return success to client
         final CompletableFuture<Message> f =
-                CompletableFuture.completedFuture(Message.valueOf("200 SUCCESS!"));
+                CompletableFuture.completedFuture(Message.valueOf("Operation " + operation + " successfully performed!"));
 
         // if leader, log the incremented value and it's log index
         if (trx.getServerRole() == RaftProtos.RaftPeerRole.LEADER) {
-            LOG.info("{} operation performed - {}: term", operation, index);
+            LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry: {} |", operation, index, term, clientRequest.toString());
         }
 
         return f;
     }
-
-
-
-
-
 
 
 }

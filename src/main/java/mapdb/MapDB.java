@@ -1,17 +1,16 @@
 package mapdb;
 
-import org.apache.ratis.statemachine.impl.BaseStateMachine;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
-public class MapDBServer extends BaseStateMachine {
+public class MapDB {
 
     public DB db;
     public HTreeMap<String, String> map;
 
-    public MapDBServer(String dbpath, String nameMap) {
+    public MapDB(String dbpath, String nameMap) {
         this.db = DBMaker.fileDB(dbpath).fileMmapEnable().transactionEnable().make();
         this.map = db.hashMap(nameMap)
                 .keySerializer(Serializer.STRING)

@@ -8,6 +8,7 @@ import org.apache.ratis.grpc.GrpcFactory;
 import org.apache.ratis.protocol.ClientId;
 import org.apache.ratis.protocol.Message;
 import org.apache.ratis.protocol.RaftClientReply;
+import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -38,7 +39,7 @@ public class CrudClient {
      * @return Message with the server response
      */
 
-    public static String sendAndGetClientReply(RaftClient raftClient, String clientRequest) throws IOException {
+    public static String sendAndGetClientReply(RaftClient raftClient, ByteString clientRequest) throws IOException {
         RaftClientReply reply =  raftClient.io().send(Message.valueOf(clientRequest));
         return reply.getMessage().getContent().toString(Charset.defaultCharset());
     }
@@ -49,7 +50,7 @@ public class CrudClient {
      *
      * @return Message with the server response
      */
-    public static String sendReadOnlyAndGetClientReply(RaftClient raftClient, String clientRequest) throws IOException {
+    public static String sendReadOnlyAndGetClientReply(RaftClient raftClient, ByteString clientRequest) throws IOException {
         RaftClientReply reply =  raftClient.io().sendReadOnly(Message.valueOf(clientRequest));
         return reply.getMessage().getContent().toString(Charset.defaultCharset());
     }

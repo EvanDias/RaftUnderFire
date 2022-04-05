@@ -1,6 +1,6 @@
 package mapdb.crud;
 
-import mapdb.MapDBServer;
+import mapdb.MapDB;
 import org.apache.ratis.proto.RaftProtos;
 import org.apache.ratis.protocol.Message;
 import org.apache.ratis.protocol.RaftGroupId;
@@ -12,10 +12,13 @@ import org.apache.ratis.statemachine.TransactionContext;
 import org.apache.ratis.statemachine.impl.BaseStateMachine;
 import org.apache.ratis.statemachine.impl.SimpleStateMachineStorage;
 import org.apache.ratis.statemachine.impl.SingleFileSnapshotInfo;
+import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class CrudStateMachine extends BaseStateMachine {
@@ -23,7 +26,7 @@ public class CrudStateMachine extends BaseStateMachine {
     private final SimpleStateMachineStorage storage =
             new SimpleStateMachineStorage();
 
-    public MapDBServer mapServer;
+    public MapDB mapServer;
 
 
     @Override
@@ -36,7 +39,7 @@ public class CrudStateMachine extends BaseStateMachine {
         String sv = server.toString();
         String[] svSplitted = sv.split(":");
 
-        this.mapServer = new MapDBServer("src/main/java/mapdb/files/" + svSplitted[0] + ".db", "map" + svSplitted[0]);
+        this.mapServer = new MapDB("src/main/java/mapdb/files/" + svSplitted[0] + ".db", "map" + svSplitted[0]);
 
         //LogEntryHeader[] entries = server.getDivision(groupId).getRaftLog().getEntries(0,5);
         //for (LogEntryHeader entry : entries) {
@@ -79,38 +82,29 @@ public class CrudStateMachine extends BaseStateMachine {
 
     /**
      *  This class maintain a HTreeMap (MapDB) and accept many commands/requests:
-     *  GET, KEYSET and SIZE, GET. They are ReadOnly commands which will be handled by
+     *  GET, KEYSET and SIZE. They are ReadOnly commands which will be handled by
      *  this method
      * @param request client request that arrive in a String/Json format
      * @return message reply to client
      */
     @Override
-    public CompletableFuture<Message> query(Message request) {
+    public CompletableFuture<Message> query(Message request)  {
 
-        String msg = request.getContent().toString(Charset.defaultCharset()); // msg arrive in json string format by the client
+        CrudMessage requestMsg = CrudMessage.deserializeByteStringToObject(ByteString.copyFrom(request.getContent().toByteArray()));
 
-        JSONObject clientRequest = new JSONObject(msg);
+        String requestedValue;
 
-        if (!clientRequest.has("REQUEST")) {
-            return CompletableFuture.completedFuture(
-                    Message.valueOf("There is no REQUEST argument in the message body")); }
-
-        String operation, requestedValue;
-
-        switch (clientRequest.get("REQUEST").toString()) {
-            case "GET":
-                requestedValue = this.mapServer.getValue(clientRequest.get("KEY").toString()); // returns the value contained in the mapdb
-                operation = "GET";
+        switch (Objects.requireNonNull(requestMsg).getType()) {
+            case READ:
+                requestedValue = this.mapServer.getValue(requestMsg.getKey()); // returns the value contained in the mapdb
                 break;
 
-            case "KEYSET":
+            case KEYSET:
                 requestedValue = this.mapServer.getKeySet();
-                operation = "KEYSET";
                 break;
 
-            case "SIZE":
+            case SIZE:
                 requestedValue = this.mapServer.getSize();
-                operation = "SIZE";
                 break;
 
             default:
@@ -121,9 +115,9 @@ public class CrudStateMachine extends BaseStateMachine {
         final long index = getLastAppliedTermIndex().getIndex();
         final long term = getLastAppliedTermIndex().getTerm();
 
-        LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry: {} | Reply: {}", operation, index, term, clientRequest.toString(), requestedValue);
-
-        if(requestedValue == null)
+        LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry: TODO | Reply: {}", requestMsg.getType().toString(), index, term, requestedValue);
+        // TODO: MSG TO STRING
+        if (requestedValue == null)
             return CompletableFuture.completedFuture(Message.EMPTY);
         else
             return CompletableFuture.completedFuture(
@@ -147,11 +141,7 @@ public class CrudStateMachine extends BaseStateMachine {
 
         //trx.getLogEntry().getMetadataEntry().toString();
 
-        JSONObject clientRequest = new JSONObject(logData);
-
-        if (!clientRequest.has("REQUEST")) {
-            return CompletableFuture.completedFuture(
-                    Message.valueOf("There is no REQUEST argument in the message body")); }
+        CrudMessage requestMsg = CrudMessage.deserializeByteStringToObject(ByteString.copyFrom(entry.getStateMachineLogEntry().getLogData().toByteArray()));
 
         //update the last applied term and index
         final long index = entry.getIndex();
@@ -160,35 +150,31 @@ public class CrudStateMachine extends BaseStateMachine {
 
         String operation;
 
-        switch (clientRequest.get("REQUEST").toString()) {
-            case "PUT":
-                this.mapServer.putValue(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
-                operation = "PUT";
+        switch (Objects.requireNonNull(requestMsg).getType()) {
+            case CREATE:
+                this.mapServer.putValue(requestMsg.getKey(), requestMsg.getValue());
                 break;
 
-            case "UPDATE":
-                this.mapServer.updateValue(clientRequest.get("KEY").toString(), clientRequest.get("VALUE").toString());
-                operation = "UPDATE";
+            case UPDATE:
+                this.mapServer.updateValue(requestMsg.getKey(), requestMsg.getValue());
                 break;
 
-            case "DELETE":
-                this.mapServer.deleteValue(clientRequest.get("KEY").toString());
-                operation = "DELETE";
+            case DELETE:
+                this.mapServer.deleteValue(requestMsg.getKey());
                 break;
 
             default:
                 return CompletableFuture.completedFuture(
                         Message.valueOf("Invalid request type!"));
-
         }
 
         // return success to client
         final CompletableFuture<Message> f =
-                CompletableFuture.completedFuture(Message.valueOf("Operation " + operation + " successfully performed!"));
+                CompletableFuture.completedFuture(Message.valueOf("Operation " + requestMsg.getType().toString() + " successfully performed!"));
 
         // if leader, log the incremented value and it's log index
         if (trx.getServerRole() == RaftProtos.RaftPeerRole.LEADER) {
-            LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry: {} |", operation, index, term, clientRequest.toString());
+            LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry:  |", requestMsg.getType().toString(), index, term);
         }
 
         return f;

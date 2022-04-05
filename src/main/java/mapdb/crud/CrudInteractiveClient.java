@@ -11,8 +11,6 @@ public class CrudInteractiveClient {
 
         RaftClient raftClient = CrudClient.buildClient();
 
-        JSONObject clientRequest = new JSONObject();
-
         Scanner stdin = new Scanner(System.in);
 
         String key, value, result;
@@ -20,51 +18,49 @@ public class CrudInteractiveClient {
         while(true) {
             System.out.println("- - - - - - - - - - - - - - - -");
             System.out.println("Select an option:");
-            System.out.println("1 - Put value");
-            System.out.println("2 - Get value");
+            System.out.println("1 - Create value");
+            System.out.println("2 - Read value");
             System.out.println("3 - Delete Value");
             System.out.println("4 - Update Value");
             System.out.println("5 - Size of mapdb");
             System.out.println("6 - List keyset");
             System.out.println("7 - Exit");
+            System.out.println("8 - Test case with loops");
 
             System.out.print("Option: ");
             int cmd = stdin.nextInt();
-            clientRequest.clear();
 
             switch (cmd) {
                 case 1 -> {
-                    System.out.println("\nPut value");
+                    System.out.println("\nCreate value");
                     System.out.print("Key: ");
                     key = stdin.next();
                     System.out.print("Value: ");
                     value = stdin.next();
 
-                    clientRequest.put("REQUEST", "PUT");
-                    clientRequest.put("KEY", key);
-                    clientRequest.put("VALUE", value);
+                    CrudMessage requestMsg = CrudMessage.newCreateRequest(key, value);
 
-                    System.out.println("Response: " + CrudClient.sendAndGetClientReply(raftClient, clientRequest.toString()));
+                    System.out.println("Response: " + CrudClient.sendAndGetClientReply(raftClient, requestMsg.serializeObjectToByteString()));
                 }
                 case 2 -> {
-                    System.out.println("\nGet value");
+
+                    System.out.println("\nRead value");
                     System.out.print("Key: ");
                     key = stdin.next();
 
-                    clientRequest.put("REQUEST", "GET");
-                    clientRequest.put("KEY", key);
+                    CrudMessage requestMsg = CrudMessage.newReadRequest(key);
 
-                    System.out.println("Response: " + CrudClient.sendReadOnlyAndGetClientReply(raftClient, clientRequest.toString()));
+                    System.out.println("Response: " + CrudClient.sendReadOnlyAndGetClientReply(raftClient, requestMsg.serializeObjectToByteString()));
                 }
+
                 case 3 -> {
                     System.out.println("\nRemove value");
                     System.out.print("Key: ");
                     key = stdin.next();
 
-                    clientRequest.put("REQUEST", "DELETE");
-                    clientRequest.put("KEY", key);
+                    CrudMessage requestMsg = CrudMessage.newDeleteRequest(key);
 
-                    System.out.println("\nResponse: " + CrudClient.sendAndGetClientReply(raftClient, clientRequest.toString()));
+                    System.out.println("\nResponse: " + CrudClient.sendAndGetClientReply(raftClient, requestMsg.serializeObjectToByteString()));
                 }
                 case 4 -> {
                     System.out.println("\nUpdate value");
@@ -73,22 +69,32 @@ public class CrudInteractiveClient {
                     System.out.print("Value: ");
                     value = stdin.next();
 
-                    clientRequest.put("REQUEST", "UPDATE");
-                    clientRequest.put("KEY", key);
-                    clientRequest.put("VALUE", value);
+                    CrudMessage requestMsg = CrudMessage.newUpdateRequest(key, value);
 
-                    System.out.println("Response: " + CrudClient.sendAndGetClientReply(raftClient, clientRequest.toString()));
+                    System.out.println("Response: " + CrudClient.sendAndGetClientReply(raftClient, requestMsg.serializeObjectToByteString()));
                 }
                 case 5 -> {
-                    clientRequest.put("REQUEST", "SIZE");
-                    System.out.println("\nSize: " + CrudClient.sendReadOnlyAndGetClientReply(raftClient, clientRequest.toString()));
+                    CrudMessage requestMsg = CrudMessage.newSizeRequest();
+                    System.out.println("\nSize: " + CrudClient.sendReadOnlyAndGetClientReply(raftClient, requestMsg.serializeObjectToByteString()));
                 }
                 case 6 -> {
-                    clientRequest.put("REQUEST", "KEYSET");
-                    System.out.println("\nKey-set: " + CrudClient.sendReadOnlyAndGetClientReply(raftClient, clientRequest.toString()));
+                    CrudMessage requestMsg = CrudMessage.newKeysetRequest();
+                    System.out.println("\nKey-set: " + CrudClient.sendReadOnlyAndGetClientReply(raftClient, requestMsg.serializeObjectToByteString()));
                 }
                 case 7 -> {
                         System.exit(0);
+                }
+                case 8 -> {
+
+                    System.out.print("For i: ");
+                    int i = stdin.nextInt();
+
+                    for (int j = 0; j < i; j++) {
+                        CrudMessage requestMsg = CrudMessage.newCreateRequest("key" + String.valueOf(j), "value" + String.valueOf(j));
+
+                        System.out.println("Response: " + CrudClient.sendAndGetClientReply(raftClient, requestMsg.serializeObjectToByteString()));
+
+                    }
                 }
                 default -> {
                 }

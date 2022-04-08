@@ -11,7 +11,7 @@ public class MapDB {
     public HTreeMap<String, String> map;
 
     public MapDB(String dbpath, String nameMap) {
-        this.db = DBMaker.fileDB(dbpath).fileMmapEnable().transactionEnable().make();
+        this.db = DBMaker.fileDB(dbpath).fileMmapEnable().make(); // this.db = DBMaker.fileDB(dbpath).fileMmapEnable().transactionEnable().make();
         this.map = db.hashMap(nameMap)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.STRING)

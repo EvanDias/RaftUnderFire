@@ -3,7 +3,6 @@ package mapdb;
 import org.mapdb.*;
 import java.util.concurrent.ConcurrentMap;
 import java.io.File;
-import java.util.logging.Logger;
 
 public class mapdbHelloWorld {
 

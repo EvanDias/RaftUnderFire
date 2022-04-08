@@ -1,6 +1,7 @@
 package mapdb.crud;
 
 import counter.Config;
+import mapdb.ycsb.YCSBMessage;
 import org.apache.ratis.client.RaftClient;
 import org.apache.ratis.conf.Parameters;
 import org.apache.ratis.conf.RaftProperties;
@@ -53,6 +54,17 @@ public class CrudClient {
     public static String sendReadOnlyAndGetClientReply(RaftClient raftClient, ByteString clientRequest) throws IOException {
         RaftClientReply reply =  raftClient.io().sendReadOnly(Message.valueOf(clientRequest));
         return reply.getMessage().getContent().toString(Charset.defaultCharset());
+    }
+
+    public static YCSBMessage sendAndGetClientReply2(RaftClient raftClient, ByteString clientRequest) throws IOException {
+        RaftClientReply reply =  raftClient.io().send(Message.valueOf(clientRequest));
+        return YCSBMessage.deserializeByteStringToObject(reply.getMessage().getContent());
+    }
+
+
+    public static YCSBMessage sendReadOnlyAndGetClientReply2(RaftClient raftClient, ByteString clientRequest) throws IOException {
+        RaftClientReply reply =  raftClient.io().sendReadOnly(Message.valueOf(clientRequest));
+        return YCSBMessage.deserializeByteStringToObject(reply.getMessage().getContent());
     }
 
 }

@@ -1,6 +1,7 @@
 package mapdb.crud;
 
 import counter.Config;
+import mapdb.ycsb.YCSBStateMachine;
 import org.apache.ratis.conf.RaftProperties;
 import org.apache.ratis.grpc.GrpcConfigKeys;
 import org.apache.ratis.protocol.RaftPeer;
@@ -19,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class CrudServer implements Closeable {
     private final RaftServer server;
 
-    public CrudServer(RaftPeer peer, File storageDir, CrudStateMachine crudStateMachine) throws IOException {
+    public CrudServer(RaftPeer peer, File storageDir, YCSBStateMachine crudStateMachine) throws IOException {
         //create a property object
         RaftProperties properties = new RaftProperties();
 
@@ -60,7 +61,8 @@ public class CrudServer implements Closeable {
         final RaftPeer currentPeer = Config.PEERS.get(Integer.parseInt(args[0]) - 1);
 
         //create state machine
-        CrudStateMachine crudStateMachine = new CrudStateMachine();
+        //CrudStateMachine crudStateMachine = new CrudStateMachine();
+        YCSBStateMachine crudStateMachine = new YCSBStateMachine();
 
         //start a crud server
         final File storageDir = new File("./src/main/java/mapdb/crud/nodes/" + currentPeer.getId());

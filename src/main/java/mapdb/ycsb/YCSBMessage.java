@@ -1,7 +1,6 @@
 package mapdb.ycsb;
 
 import lombok.Getter;
-import mapdb.crud.CrudMessage;
 import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
 import site.ycsb.ByteIterator;
 import java.io.ByteArrayInputStream;
@@ -30,50 +29,46 @@ public class YCSBMessage implements Serializable {
     };
 
     private Type type = Type.NON;
-    private String dbname = "";
     private String key = "";
+    private String value;
     private Set<String> fields;
-    private Map<String, ByteIterator> values;
     private ReplyStatus status;
     private Map<String, ByteIterator> results;
     private String errorMsg = "";
     private String response = "";
-    private String value;
 
     private YCSBMessage() {
         //super();
     }
 
-    // , Map<String, ByteIterator> values
     public static YCSBMessage newCreateRequest(String key, String value) {
         YCSBMessage message = new YCSBMessage();
         message.type = Type.CREATE;
         message.key = key;
         message.value = value;
-        //message.values = values;
         return message;
     }
 
-    public static YCSBMessage newReadRequest(String table, String key, Set<String> fields, Map<String, ByteIterator> results) {
+    public static YCSBMessage newReadRequest(String key, Set<String> fields, Map<String, ByteIterator> results) {
         YCSBMessage message = new YCSBMessage();
         message.type = Type.READ;
-        message.dbname = table;
         message.key = key;
         message.fields = fields;
         message.results = results;
         return message;
     }
 
-    public static YCSBMessage newUpdateRequest(String table, String key, Map<String, ByteIterator> values) {
+    public static YCSBMessage newUpdateRequest(String key, String value) {
         YCSBMessage message = new YCSBMessage();
         message.type = Type.UPDATE;
-        message.dbname = table;
         message.key = key;
-        message.values = values;
+        message.value = value;
         return message;
     }
 
-    public static YCSBMessage newReadResponse(String response, ReplyStatus result) {
+
+
+    public static YCSBMessage newReply(String response, ReplyStatus result) {
         YCSBMessage message = new YCSBMessage();
         message.response = response;
         message.status = result;
@@ -81,20 +76,6 @@ public class YCSBMessage implements Serializable {
     }
 
 
-    public static YCSBMessage newInsertResponse(ReplyStatus result) {
-        YCSBMessage message = new YCSBMessage();
-        message.status = result;
-        return message;
-    }
-    /*
-        public static YCSBMessage newUpdateResponse(Status result) {
-            YCSBMessage message = new YCSBMessage();
-            message.status = result;
-            return message;
-        }
-
-
-        */
     public static YCSBMessage newErrorMessage(String errorMsg) {
         YCSBMessage message = new YCSBMessage();
         message.errorMsg = errorMsg;
@@ -152,15 +133,4 @@ public class YCSBMessage implements Serializable {
         return ByteString.copyFrom(b);
     }
 
-    public static void main(String[] args) {
-        YCSBMessage request = YCSBMessage.newReadRequest("table", "key1", null, null);
-
-        ByteString b = request.serializeObjectToByteString();
-        System.out.println(b);
-
-        YCSBMessage d = deserializeByteStringToObject(b);
-
-        System.out.println(d.getKey());
-
-    }
 }

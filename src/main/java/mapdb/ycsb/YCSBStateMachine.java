@@ -1,7 +1,6 @@
 package mapdb.ycsb;
 
 import mapdb.MapDB;
-import mapdb.crud.CrudMessage;
 import org.apache.ratis.proto.RaftProtos;
 import org.apache.ratis.protocol.Message;
 import org.apache.ratis.protocol.RaftGroupId;
@@ -14,7 +13,6 @@ import org.apache.ratis.statemachine.impl.BaseStateMachine;
 import org.apache.ratis.statemachine.impl.SimpleStateMachineStorage;
 import org.apache.ratis.statemachine.impl.SingleFileSnapshotInfo;
 import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
-import site.ycsb.Status;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,24 +82,24 @@ public class YCSBStateMachine extends BaseStateMachine {
     public CompletableFuture<Message> query(Message request)  {
 
         YCSBMessage ycsbRequest = YCSBMessage.deserializeByteStringToObject(ByteString.copyFrom(request.getContent().toByteArray()));
-        YCSBMessage ycsbReply = YCSBMessage.newErrorMessage("");
+        YCSBMessage ycsbReply;
 
         String requestedValue;
 
-        switch (Objects.requireNonNull(ycsbRequest).getType()) {
-            case READ:
+        if (Objects.requireNonNull(ycsbRequest).getType() == YCSBMessage.Type.READ) {
+
+            if (!this.mapServer.map.containsKey(ycsbRequest.getKey())) {
+                ycsbReply = YCSBMessage.newErrorMessage("The key is not contained in the KEYSET!");
+                return CompletableFuture.completedFuture(Message.valueOf(ycsbReply.serializeObjectToByteString()));
+            } else {
                 requestedValue = this.mapServer.getValue(ycsbRequest.getKey()); // returns the value contained in the mapdb
+            }
 
-                if(requestedValue.equals(""))
-                    ycsbReply = YCSBMessage.newErrorMessage("There is no record for key: " + ycsbRequest.getKey());
-                else
-                    ycsbReply = YCSBMessage.newReadResponse(requestedValue, YCSBMessage.ReplyStatus.OK);
+            ycsbReply = YCSBMessage.newReply(requestedValue, YCSBMessage.ReplyStatus.OK);
 
-                break;
-
-            default:
-                return CompletableFuture.completedFuture(
-                        Message.valueOf("Invalid request type!"));
+        } else {
+            ycsbReply = YCSBMessage.newErrorMessage("Bad request type!");
+            return CompletableFuture.completedFuture(Message.valueOf(ycsbReply.serializeObjectToByteString()));
         }
 
         final long index = getLastAppliedTermIndex().getIndex();
@@ -125,49 +123,44 @@ public class YCSBStateMachine extends BaseStateMachine {
     public CompletableFuture<Message> applyTransaction(TransactionContext trx) {
         final RaftProtos.LogEntryProto entry = trx.getLogEntry();
 
-        YCSBMessage ycsbRequest = YCSBMessage.deserializeByteStringToObject(ByteString.copyFrom(entry.toByteArray()));
-        YCSBMessage ycsbReply = YCSBMessage.newErrorMessage("");
-        String requestedValue;
+        YCSBMessage ycsbRequest = YCSBMessage.deserializeByteStringToObject(ByteString.copyFrom(entry.getStateMachineLogEntry().getLogData().toByteArray()));
+        YCSBMessage ycsbReply = null;
 
         //check if the command is valid
         String logData = entry.getStateMachineLogEntry().getLogData()
                 .toString(Charset.defaultCharset());
-
-        //trx.getLogEntry().getMetadataEntry().toString();
-
-        CrudMessage requestMsg = CrudMessage.deserializeByteStringToObject(ByteString.copyFrom(entry.getStateMachineLogEntry().getLogData().toByteArray()));
 
         //update the last applied term and index
         final long index = entry.getIndex();
         final long term = entry.getTerm();
         updateLastAppliedTermIndex(term, index);
 
-        String operation;
 
-        switch (Objects.requireNonNull(requestMsg).getType()) {
+        switch (Objects.requireNonNull(ycsbRequest).getType()) {
             case CREATE:
                 this.mapServer.putValue(ycsbRequest.getKey(), ycsbRequest.getValue()); // returns the value contained in the mapdb
 
-                ycsbReply = YCSBMessage.newInsertResponse(YCSBMessage.ReplyStatus.OK);
-
+                ycsbReply = YCSBMessage.newReply("Operation CREATE successfully performed!", YCSBMessage.ReplyStatus.OK);
                 break;
 
             case UPDATE:
-                this.mapServer.updateValue(requestMsg.getKey(), requestMsg.getValue());
+                this.mapServer.updateValue(ycsbRequest.getKey(), ycsbRequest.getValue()); // returns the value contained in the mapdb
+
+                ycsbReply = YCSBMessage.newReply("Operation UPDATE successfully performed!", YCSBMessage.ReplyStatus.OK);
                 break;
 
             default:
-                return CompletableFuture.completedFuture(
-                        Message.valueOf("Invalid request type!"));
+            ycsbReply = YCSBMessage.newErrorMessage("Bad request type!");
+            return CompletableFuture.completedFuture(Message.valueOf(ycsbReply.serializeObjectToByteString()));
         }
 
         // return success to client
         final CompletableFuture<Message> f =
-                CompletableFuture.completedFuture(Message.valueOf("Operation " + requestMsg.getType().toString() + " successfully performed!"));
+                CompletableFuture.completedFuture(Message.valueOf(ycsbReply.serializeObjectToByteString()));
 
         // if leader, log the incremented value and it's log index
         if (trx.getServerRole() == RaftProtos.RaftPeerRole.LEADER) {
-            LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry:  |", requestMsg.getType().toString(), index, term);
+            LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry:  |", ycsbRequest.getType().toString(), index, term);
         }
 
         return f;

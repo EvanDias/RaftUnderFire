@@ -4,27 +4,27 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import mapdb.crud.CrudClient;
 import org.apache.ratis.client.RaftClient;
-import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
 
-import java.io.IOException;
 import java.util.*;
 
 
 public class YCSBClient extends DB {
 
     @Getter
-    RaftClient raftClient = CrudClient.buildClient();
+    RaftClient raftClient;
 
     public YCSBClient() {
     }
 
     @Override
     public void init() throws DBException {
-        super.init();
+
+        raftClient = CrudClient.buildClient();
+        System.out.println("YCSBClient initiated with client id " +  raftClient.getId());
     }
 
     /**
@@ -35,13 +35,14 @@ public class YCSBClient extends DB {
      * @return - The result of the operation.
      */
 
+
     @SneakyThrows
     @Override
     public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
 
         HashMap<String, byte[]> results = new HashMap<>();
 
-        YCSBMessage request = YCSBMessage.newReadRequest(table, key, fields, result);
+        YCSBMessage request = YCSBMessage.newReadRequest(key, fields, result);
 
         YCSBMessage reply = CrudClient.sendReadOnlyAndGetClientReply2(raftClient, request.serializeObjectToByteString());
 
@@ -52,29 +53,48 @@ public class YCSBClient extends DB {
 
     @SneakyThrows
     @Override
-    public Status insert(String s, String key, Map<String, ByteIterator> values) {
+    public Status insert(String table, String key, Map<String, ByteIterator> values) {
 
         Iterator<String> keys = values.keySet().iterator();
 
-        Map<String, ByteIterator> map = new HashMap<>();
+        String field, value = "";
 
         while (keys.hasNext()) {
-            String field = keys.next(); // field and value
-            map.put(keys.next(), values.get(field));
+            field = keys.next(); // field and value
+            value =  values.get(field).toString();
         }
 
-        YCSBMessage request = YCSBMessage.newCreateRequest(key, "testu");
+        if (Objects.equals(value, "") || Objects.equals(key, ""))
+            return Status.BAD_REQUEST;
+
+        YCSBMessage request = YCSBMessage.newCreateRequest(key, value);
 
         YCSBMessage reply = CrudClient.sendAndGetClientReply2(raftClient, request.serializeObjectToByteString());
 
-        return null;
+        return replyStatusToStatus(reply.getStatus());
     }
 
+    @SneakyThrows
     @Override
-    public Status update(String s, String s1, Map<String, ByteIterator> map) {
-        return Status.NOT_IMPLEMENTED;
-    }
+    public Status update(String table, String key, Map<String, ByteIterator> values) {
+        Iterator<String> keys = values.keySet().iterator();
 
+        String field, value = "";
+
+        while (keys.hasNext()) {
+            field = keys.next(); // field and value
+            value =  values.get(field).toString();
+        }
+
+        if (Objects.equals(value, "") || Objects.equals(key, ""))
+            return Status.BAD_REQUEST;
+
+        YCSBMessage request = YCSBMessage.newCreateRequest(key, value);
+
+        YCSBMessage reply = CrudClient.sendAndGetClientReply2(raftClient, request.serializeObjectToByteString());
+
+        return replyStatusToStatus(reply.getStatus());
+    }
 
     @Override
     public Status scan(String s, String s1, int i, Set<String> set, Vector<HashMap<String, ByteIterator>> vector) {
@@ -84,49 +104,6 @@ public class YCSBClient extends DB {
     @Override
     public Status delete(String s, String s1) {
         return Status.NOT_IMPLEMENTED;
-    }
-
-
-    /*
-    public static Status read2(String table, String key, Set<String> fields, Map<String, ByteIterator> result, RaftClient raftClient) throws IOException {
-
-        HashMap<String, byte[]> results = new HashMap<>();
-
-        YCSBMessage request = YCSBMessage.newReadRequest(table, key, fields, result);
-
-        YCSBMessage reply = CrudClient.sendReadOnlyAndGetClientReply2(raftClient, request.serializeObjectToByteString());
-
-        System.out.println("key:" + request.getKey() + ", value: " + reply.getResponse());
-
-        Status r = replyStatusToStatus(reply.getStatus());
-
-        assert r != null;
-        System.out.println(r.toString());
-
-        return r;
-    }*/
-
-    public static Status insert2(String s, String key, Map<String, ByteIterator> values, RaftClient raftClient) throws IOException {
-
-        Iterator<String> keys = values.keySet().iterator();
-
-        Map<String, ByteIterator> map = new HashMap<>();
-
-        while (keys.hasNext()) {
-            String field = keys.next();
-            map.put(keys.next(), values.get(field));
-        }
-
-        YCSBMessage request = YCSBMessage.newCreateRequest(key, "testi");
-
-        YCSBMessage reply = CrudClient.sendAndGetClientReply2(raftClient, request.serializeObjectToByteString());
-
-        Status r = replyStatusToStatus(reply.getStatus());
-
-        assert r != null;
-        System.out.println(r.toString());
-
-        return r;
     }
 
     public static Status replyStatusToStatus(YCSBMessage.ReplyStatus status) {
@@ -149,6 +126,36 @@ public class YCSBClient extends DB {
     }
 
 
+    /*
+    public static Status read2(String key, Set<String> fields, Map<String, ByteIterator> result, RaftClient raftClient) throws IOException {
+
+        YCSBMessage request = YCSBMessage.newReadRequest(key, fields, result);
+
+        YCSBMessage reply = CrudClient.sendReadOnlyAndGetClientReply2(raftClient, request.serializeObjectToByteString());
+
+        System.out.println("key:" + request.getKey() + ", value: " + reply.getResponse());
+
+        Status r = replyStatusToStatus(reply.getStatus());
+
+        assert r != null;
+        System.out.println(r.toString());
+
+        return r;
+    }
+
+    public static Status insert2(String table, String key, Map<String, ByteIterator> values, RaftClient raftClient) throws IOException {
+
+        YCSBMessage request = YCSBMessage.newCreateRequest(key, "xd");
+
+        YCSBMessage reply = CrudClient.sendAndGetClientReply2(raftClient, request.serializeObjectToByteString());
+
+        System.out.println(reply.getResponse());
+
+        return Status.OK;
+    }
+
+
+
     public static void main(String[] args) throws IOException {
         YCSBClient client = new YCSBClient();
 
@@ -158,10 +165,17 @@ public class YCSBClient extends DB {
 
         Map<String, ByteIterator> map = new HashMap<>();
 
-        Status reply4 = insert2("table", "k2", map, client.getRaftClient());
+        Status reply4 = insert2("table", "key4", map, client.getRaftClient());
 
 
-        //Status reply = read2("table", "k2", null, null, client.getRaftClient());
+        Status reply = read2( "key4", null, null, client.getRaftClient());
 
-    }
+        YCSBMessage request = YCSBMessage.newCreateRequest("key4", "novoxd");
+
+        YCSBMessage reply6 = CrudClient.sendAndGetClientReply2(client.getRaftClient(), request.serializeObjectToByteString());
+
+        Status reply0 = read2( "key4", null, null, client.getRaftClient());
+
+
+    } */
 }

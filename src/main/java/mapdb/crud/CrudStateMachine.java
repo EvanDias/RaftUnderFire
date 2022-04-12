@@ -13,11 +13,9 @@ import org.apache.ratis.statemachine.impl.BaseStateMachine;
 import org.apache.ratis.statemachine.impl.SimpleStateMachineStorage;
 import org.apache.ratis.statemachine.impl.SingleFileSnapshotInfo;
 import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
-import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 

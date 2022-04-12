@@ -1,7 +1,6 @@
 package mapdb.crud;
 
 import org.apache.ratis.client.RaftClient;
-import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Scanner;
 

@@ -119,7 +119,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/lib</outputDirectory>
+                            <outputDirectory>target/dependencies</outputDirectory>
                             <overWriteIfNewer>true</overWriteIfNewer>
                             <excludeGroupIds>
                                 junit,org.hamcrest,org.mockito,org.powermock,${project.groupId}
@@ -140,6 +140,8 @@
                 </configuration>
             </plugin>
         </plugins>
+
+
 
 
     </build>

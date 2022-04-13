@@ -9,6 +9,7 @@ import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
 
+import java.io.IOException;
 import java.util.*;
 
 
@@ -126,8 +127,8 @@ public class YCSBClient extends DB {
     }
 
 
-    /*
-    public static Status read2(String key, Set<String> fields, Map<String, ByteIterator> result, RaftClient raftClient) throws IOException {
+
+    public static Status read2(String key, Set<String> fields, Map<String, ByteIterator> result, RaftClient raftClient) throws IOException, IOException {
 
         YCSBMessage request = YCSBMessage.newReadRequest(key, fields, result);
 
@@ -177,5 +178,5 @@ public class YCSBClient extends DB {
         Status reply0 = read2( "key4", null, null, client.getRaftClient());
 
 
-    } */
+    }
 }

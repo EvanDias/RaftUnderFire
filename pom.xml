@@ -119,7 +119,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/dependencies</outputDirectory>
+                            <outputDirectory>target/</outputDirectory>
                             <overWriteIfNewer>true</overWriteIfNewer>
                             <excludeGroupIds>
                                 junit,org.hamcrest,org.mockito,org.powermock,${project.groupId}

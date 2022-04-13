@@ -21,7 +21,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class YCSBStateMachine extends BaseStateMachine {
-
     public MapDB mapServer;
 
     private final SimpleStateMachineStorage storage = new SimpleStateMachineStorage();

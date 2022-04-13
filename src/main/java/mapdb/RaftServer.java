@@ -102,5 +102,4 @@ public class RaftServer implements Closeable {
         }
 
     }
-
 }

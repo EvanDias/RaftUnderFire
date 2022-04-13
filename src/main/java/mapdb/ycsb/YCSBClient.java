@@ -9,7 +9,6 @@ import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
 
-import java.io.IOException;
 import java.util.*;
 
 
@@ -43,11 +42,13 @@ public class YCSBClient extends DB {
 
         HashMap<String, byte[]> results = new HashMap<>();
 
+        System.out.println("KEY PARA PROCURAR: " + key);
+
         YCSBMessage request = YCSBMessage.newReadRequest(key, fields, result);
 
         YCSBMessage reply = CrudClient.sendReadOnlyAndGetClientReply2(raftClient, request.serializeObjectToByteString());
 
-        System.out.println("key:" + reply.getKey() + ", value: " + reply.getResponse());
+        System.out.println("rkey:" + reply.getKey() + ", rvalue: " + reply.getResponse());
 
         return replyStatusToStatus(reply.getStatus());
     }
@@ -58,7 +59,7 @@ public class YCSBClient extends DB {
 
         Iterator<String> keys = values.keySet().iterator();
 
-        String field, value = "";
+        String field = "", value = "";
 
         while (keys.hasNext()) {
             field = keys.next(); // field and value
@@ -68,9 +69,13 @@ public class YCSBClient extends DB {
         if (Objects.equals(value, "") || Objects.equals(key, ""))
             return Status.BAD_REQUEST;
 
+        System.out.println("Insert key: " + key);
+
         YCSBMessage request = YCSBMessage.newCreateRequest(key, value);
 
         YCSBMessage reply = CrudClient.sendAndGetClientReply2(raftClient, request.serializeObjectToByteString());
+
+        System.out.println(reply.getResponse() + " - " + reply.getStatus().toString());
 
         return replyStatusToStatus(reply.getStatus());
     }
@@ -127,7 +132,7 @@ public class YCSBClient extends DB {
     }
 
 
-
+    /*
     public static Status read2(String key, Set<String> fields, Map<String, ByteIterator> result, RaftClient raftClient) throws IOException, IOException {
 
         YCSBMessage request = YCSBMessage.newReadRequest(key, fields, result);
@@ -178,5 +183,5 @@ public class YCSBClient extends DB {
         Status reply0 = read2( "key4", null, null, client.getRaftClient());
 
 
-    }
+    } */
 }

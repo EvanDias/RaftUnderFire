@@ -1,6 +1,6 @@
 package counter.server;
 
-import counter.Config;
+import config.Config;
 import org.apache.ratis.conf.RaftProperties;
 import org.apache.ratis.grpc.GrpcConfigKeys;
 import org.apache.ratis.protocol.RaftPeer;

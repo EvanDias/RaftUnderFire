@@ -1,6 +1,6 @@
 package mapdb.crud;
 
-import counter.Config;
+import config.Config;
 import mapdb.ycsb.YCSBMessage;
 import org.apache.ratis.client.RaftClient;
 import org.apache.ratis.conf.Parameters;

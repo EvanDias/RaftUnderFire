@@ -1,6 +1,6 @@
 package counter.client;
 
-import counter.Config;
+import config.Config;
 import org.apache.ratis.client.RaftClient;
 import org.apache.ratis.conf.Parameters;
 import org.apache.ratis.conf.RaftProperties;

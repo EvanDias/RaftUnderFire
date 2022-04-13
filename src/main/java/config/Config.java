@@ -1,4 +1,4 @@
-package counter;
+package config;
 
 import org.apache.ratis.protocol.RaftGroup;
 import org.apache.ratis.protocol.RaftGroupId;

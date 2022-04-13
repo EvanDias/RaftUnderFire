@@ -53,19 +53,26 @@ public class MapDB {
         return String.valueOf(this.map.getSize());
     }
 
-    /*
-    public void hTreeMap() {
+    public static void main(String[] args) {
 
-        final String dbpath = "src/main/java/mapdb/files/serverdb.db";
-        new MapDBServer(dbpath, "name_of_map");
+        String node = "node1";
+        System.out.println(node);
 
-        File f = new File(dbpath);
-        if(f.delete()) {
-            System.out.println("DB already existed, so we deleted them");
-        }
+        DB db = DBMaker.fileDB("/home/evan/Desktop/codesrcs/git/RaftUnderFire/src/main/java/mapdb/files/" + node + ".db").fileMmapEnable().make();
+
+        HTreeMap<String, String> map = db.hashMap("map"+node)
+                .keySerializer(Serializer.STRING)
+                .valueSerializer(Serializer.STRING)
+                .createOrOpen();
+
+        int size = map.size();
+
+        System.out.println("Size hmap: " + size);
+        System.out.println("KeySet: " + map.keySet());
 
         db.close();
+        map.close();
+
     }
-    */
 
 }

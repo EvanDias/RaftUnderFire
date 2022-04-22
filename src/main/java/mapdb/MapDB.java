@@ -55,7 +55,7 @@ public class MapDB {
 
     public static void main(String[] args) {
 
-        String node = "node1";
+        String node = "node3";
         System.out.println(node);
 
         DB db = DBMaker.fileDB("/home/evan/Desktop/codesrcs/git/RaftUnderFire/src/main/java/mapdb/files/" + node + ".db").fileMmapEnable().make();
@@ -68,7 +68,7 @@ public class MapDB {
         int size = map.size();
 
         System.out.println("Size hmap: " + size);
-        System.out.println("KeySet: " + map.keySet());
+        //System.out.println("KeySet: " + map.keySet());
 
         db.close();
         map.close();

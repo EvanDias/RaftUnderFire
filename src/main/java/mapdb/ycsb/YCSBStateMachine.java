@@ -104,7 +104,7 @@ public class YCSBStateMachine extends BaseStateMachine {
         final long index = getLastAppliedTermIndex().getIndex();
         final long term = getLastAppliedTermIndex().getTerm();
 
-        LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry: TODO | Reply: {}", ycsbRequest.getType().toString(), index, term, requestedValue);
+        LOG.info("| Operation: {} | Index: {} | Term: {} | Key: {} | Reply: {} | Status: {}", ycsbRequest.getType().toString(), index, term, ycsbRequest.getKey(), requestedValue, ycsbReply.getStatus().toString());
         // TODO: MSG TO STRING
 
         return CompletableFuture.completedFuture(
@@ -159,7 +159,7 @@ public class YCSBStateMachine extends BaseStateMachine {
 
         // if leader, log the incremented value and it's log index
         if (trx.getServerRole() == RaftProtos.RaftPeerRole.LEADER) {
-            LOG.info("| Operation: {} | Index: {} | Term: {} | LogEntry:  |", ycsbRequest.getType().toString(), index, term);
+            LOG.info("| Operation: {} | Index: {} | Term: {} | Key: {} | Status: {}", ycsbRequest.getType().toString(), index, term, ycsbRequest.getKey(), ycsbReply.getStatus().toString());
         }
 
         return f;

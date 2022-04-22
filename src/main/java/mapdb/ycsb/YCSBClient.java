@@ -42,13 +42,14 @@ public class YCSBClient extends DB {
 
         HashMap<String, byte[]> results = new HashMap<>();
 
-        System.out.println("KEY PARA PROCURAR: " + key);
+        //System.out.println("Read for key: " + key);
 
         YCSBMessage request = YCSBMessage.newReadRequest(key, fields, result);
 
         YCSBMessage reply = CrudClient.sendReadOnlyAndGetClientReply2(raftClient, request.serializeObjectToByteString());
 
-        System.out.println("rkey:" + reply.getKey() + ", rvalue: " + reply.getResponse());
+        //System.out.println("rkey:" + reply.getKey() + ", rvalue: " + reply.getResponse());
+        //System.out.println("rkey:" + reply.getKey() + ", rvalue: " + reply.getResponse());
 
         return replyStatusToStatus(reply.getStatus());
     }
@@ -69,13 +70,13 @@ public class YCSBClient extends DB {
         if (Objects.equals(value, "") || Objects.equals(key, ""))
             return Status.BAD_REQUEST;
 
-        System.out.println("Insert key: " + key);
+        //System.out.println("Insert for key: " + key);
 
         YCSBMessage request = YCSBMessage.newCreateRequest(key, value);
 
         YCSBMessage reply = CrudClient.sendAndGetClientReply2(raftClient, request.serializeObjectToByteString());
 
-        System.out.println(reply.getResponse() + " - " + reply.getStatus().toString());
+        //System.out.println(reply.getResponse() + " - " + reply.getStatus().toString());
 
         return replyStatusToStatus(reply.getStatus());
     }
@@ -95,18 +96,18 @@ public class YCSBClient extends DB {
         if (Objects.equals(value, "") || Objects.equals(key, ""))
             return Status.BAD_REQUEST;
 
-        YCSBMessage request = YCSBMessage.newCreateRequest(key, value);
+        System.out.println("Update for key: " + key);
+
+        YCSBMessage request = YCSBMessage.newUpdateRequest(key, value);
 
         YCSBMessage reply = CrudClient.sendAndGetClientReply2(raftClient, request.serializeObjectToByteString());
 
+        System.out.println(reply.getResponse() + " - " + reply.getStatus().toString());
+
         return replyStatusToStatus(reply.getStatus());
     }
-
     @Override
-    public Status scan(String s, String s1, int i, Set<String> set, Vector<HashMap<String, ByteIterator>> vector) {
-        return Status.NOT_IMPLEMENTED;
-    }
-
+    public Status scan(String s, String s1, int i, Set<String> set, Vector<HashMap<String, ByteIterator>> vector) { return Status.NOT_IMPLEMENTED; }
     @Override
     public Status delete(String s, String s1) {
         return Status.NOT_IMPLEMENTED;

@@ -67,12 +67,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.hdrhistogram</groupId>
-            <artifactId>HdrHistogram</artifactId>
-            <version>2.1.12</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.raftunderfire.ycsb</groupId>
             <artifactId>RaftUnderFire</artifactId>
             <version>1.0</version>
@@ -81,11 +75,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.raftunderfire.ycsb.htrace</groupId>
-            <artifactId>RaftUnderFireYcsbHtrace</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/htrace-core4-4.1.0-incubating.jar</systemPath>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.3</version>
         </dependency>
 
     </dependencies>

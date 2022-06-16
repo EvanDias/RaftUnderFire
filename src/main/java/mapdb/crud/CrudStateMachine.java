@@ -26,7 +26,6 @@ public class CrudStateMachine extends BaseStateMachine {
 
     public MapDB mapServer;
 
-
     @Override
     public void initialize(RaftServer server, RaftGroupId groupId,
                            RaftStorage raftStorage) throws IOException {

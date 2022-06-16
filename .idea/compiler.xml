@@ -10,5 +10,8 @@
         <module name="RaftUnderFire" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ratis-server" target="1.5" />
+    </bytecodeTargetLevel>
   </component>
 </project>

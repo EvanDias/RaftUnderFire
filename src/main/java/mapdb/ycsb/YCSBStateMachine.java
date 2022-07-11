@@ -136,28 +136,25 @@ public class YCSBStateMachine extends BaseStateMachine {
 
 
         switch (Objects.requireNonNull(ycsbRequest).getType()) {
-            case CREATE:
+            case CREATE -> {
                 this.mapServer.putValue(ycsbRequest.getKey(), ycsbRequest.getValue()); // returns the value contained in the mapdb
-
                 ycsbReply = YCSBMessage.newReply("Operation CREATE successfully performed!", YCSBMessage.ReplyStatus.OK);
-                break;
-
-            case UPDATE:
+            }
+            case UPDATE -> {
                 this.mapServer.updateValue(ycsbRequest.getKey(), ycsbRequest.getValue()); // returns the value contained in the mapdb
-
                 ycsbReply = YCSBMessage.newReply("Operation UPDATE successfully performed!", YCSBMessage.ReplyStatus.OK);
-                break;
-
-            default:
-            ycsbReply = YCSBMessage.newErrorMessage("Bad request type!");
-            return CompletableFuture.completedFuture(Message.valueOf(ycsbReply.serializeObjectToByteString()));
+            }
+            default -> {
+                ycsbReply = YCSBMessage.newErrorMessage("Bad request type!");
+                return CompletableFuture.completedFuture(Message.valueOf(ycsbReply.serializeObjectToByteString()));
+            }
         }
 
         // return success to client
         final CompletableFuture<Message> f =
                 CompletableFuture.completedFuture(Message.valueOf(ycsbReply.serializeObjectToByteString()));
 
-        // if leader, log the incremented value and it's log index
+        // if leader, log the incremented value, and it's log index
         if (trx.getServerRole() == RaftProtos.RaftPeerRole.LEADER) {
             LOG.info("| Operation: {} | Index: {} | Term: {} | Key: {} | Status: {}", ycsbRequest.getType().toString(), index, term, ycsbRequest.getKey(), ycsbReply.getStatus().toString());
         }

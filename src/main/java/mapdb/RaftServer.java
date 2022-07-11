@@ -88,18 +88,18 @@ public class RaftServer implements Closeable {
 
         if (args.length < 1) {
             System.err.println("Usage: java -cp target/RaftUnderFire-1.0-SNAPSHOT.jar mapdb.RaftServer {serverIndex} {serverStateMachine}");
-            System.err.println("{serverIndex} could be 1, 2 or 3");
-            System.err.println("{serverStateMachine} could be crud, ycsb");
+            System.err.println("{serverIndex} = {1,2,3,..}  // depending on cluster size");
+            System.err.println("{serverStateMachine} = {crud, ycsb}");
             System.exit(1);
         }
-        System.out.println("Boas" + args[1]);
+
         if(args[1].equals("crud"))
             newCrudStateMachine(Config.PEERS.get(Integer.parseInt(args[0]) - 1));
         else if(args[1].equals("ycsb"))
             newYCSBStateMachine(Config.PEERS.get(Integer.parseInt(args[0]) - 1));
         else {
-            System.err.println("{serverIndex} could be 1, 2 or 3");
-            System.err.println("{serverStateMachine} could be crud, ycsb");
+            System.err.println("{serverIndex} = {1,2,3,..}  // depending on cluster size");
+            System.err.println("{serverStateMachine} = {crud, ycsb}");
             System.exit(1);
         }
 
